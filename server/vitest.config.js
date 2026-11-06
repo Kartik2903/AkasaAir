@@ -1,0 +1,4 @@
+import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: { environment: 'node', setupFiles: ['tests/setup.js'], fileParallelism: false, coverage: { include: ['src/**'], exclude: ['src/server.js'] } },
+});

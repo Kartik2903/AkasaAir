@@ -1,0 +1,95 @@
+/* Hallmark · shape: Workbench (app shell, queue-first) · genre: modern-minimal · theme: custom · job: try · idea: "Leave requests move through clear approval stages and every person sees exactly what needs them." · vibe: "calm, precise, warm neutral, one indigo signal"
+ * paper: oklch(0.97 0.004 85) · accent: oklch(0.45 0.18 275) · display: Manrope · body: Manrope · hero: none (app screen) · nav: left rail + top bar · footer: none (app) · imagery: none · signature: the approval timeline on every request
+ * axes: warm-neutral/Manrope/indigo · posture: workbench · contrast: pass · fold: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E3 S4 R4 V3 · weakest: E, one accent and plain surfaces on purpose; the timeline carries the identity */
+@import 'tailwindcss';
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* ---- Design tokens: every colour and font lives here ---- */
+:root {
+  --font-sans: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
+  --bg: #f7f6f3;
+  --surface: #ffffff;
+  --surface-2: #f0eeea;
+  --ink: #1c1a17;
+  --muted: #66625a;
+  --border: #e2dfd8;
+  --field: #8c877c;
+  --accent: #4338ca;
+  --accent-ink: #ffffff;
+  --accent-soft: #ecebfb;
+  --ok: #166534;       --ok-soft: #e3f4e8;
+  --warn: #8a5a00;     --warn-soft: #fbf0d4;
+  --bad: #b42318;      --bad-soft: #fde8e6;
+  --info: #1d4f91;     --info-soft: #e5eefa;
+  --radius: 0.5rem;
+  --shadow: 0 1px 2px rgb(28 26 23 / 0.06), 0 4px 16px rgb(28 26 23 / 0.04);
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --bg: #141311;
+  --surface: #1c1b18;
+  --surface-2: #26241f;
+  --ink: #f3f0ea;
+  --muted: #a8a297;
+  --border: #35322c;
+  --field: #7f796d;
+  --accent: #a5a1f7;
+  --accent-ink: #1c1a17;
+  --accent-soft: #26244a;
+  --ok: #7fd89a;   --ok-soft: #17301f;
+  --warn: #f0c35a; --warn-soft: #33290f;
+  --bad: #ff8f84;  --bad-soft: #3a1a17;
+  --info: #8db8f0; --info-soft: #172438;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--border);
+  --color-field: var(--field);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn); --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);  --color-bad-soft: var(--bad-soft);
+  --color-info: var(--info); --color-info-soft: var(--info-soft);
+  --radius-md: var(--radius);
+  --shadow-card: var(--shadow);
+}
+
+html, body { overflow-x: clip; }
+::selection { background: var(--accent-soft); color: var(--ink); }
+html { scrollbar-color: var(--border) transparent; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-sans); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { text-wrap: balance; font-weight: 650; letter-spacing: -0.015em; overflow-wrap: break-word; min-width: 0; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Tabular figures keep columns of numbers aligned */
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Aceternity-style spotlight sweep (transform/opacity only) */
+@keyframes spotlight { 0% { opacity: 0; transform: translate(-72%, -62%) scale(0.5); } 100% { opacity: 1; transform: translate(-50%, -40%) scale(1); } }
+.animate-spotlight { animation: spotlight 2s ease 0.75s 1 forwards; opacity: 0; }
+
+@keyframes shimmer { 50% { opacity: 0.5; } }
+.skeleton { animation: shimmer 1.6s ease-in-out infinite; background: var(--surface-2); border-radius: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  .animate-spotlight { opacity: 1; transform: translate(-50%, -40%); }
+}
+
+@media print {
+  aside, header, .no-print { display: none !important; }
+  body { background: var(--surface); }
+}

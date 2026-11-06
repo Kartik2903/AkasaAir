@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  HOD
+}
+
+enum LeaveStatus {
+  PENDING_MANAGER
+  PENDING_HOD
+  NEEDS_INFO
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+// Which approval stage the request is at. NEEDS_INFO keeps its stage; NONE = finished.
+enum ApprovalStage {
+  MANAGER
+  HOD
+  NONE
+}
+
+enum ActionType {
+  SUBMITTED
+  APPROVED
+  REJECTED
+  INFO_REQUESTED
+  COMMENT
+  EMPLOYEE_RESPONSE
+  CANCELLED
+}
+
+model Department {
+  id    String  @id @default(uuid())
+  name  String  @unique
+  hodId String? @unique
+  hod   User?   @relation("DepartmentHod", fields: [hodId], references: [id], onDelete: SetNull)
+  users User[]  @relation("DepartmentMembers")
+}
+
+model User {
+  id           String     @id @default(uuid())
+  name         String
+  email        String     @unique
+  passwordHash String
+  role         Role
+  departmentId String
+  department   Department @relation("DepartmentMembers", fields: [departmentId], references: [id])
+  managerId    String?
+  manager      User?      @relation("Reports", fields: [managerId], references: [id], onDelete: SetNull)
+  reports      User[]     @relation("Reports")
+  headOf       Department? @relation("DepartmentHod")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  leaveRequests LeaveRequest[]
+  actions       ApprovalAction[]
+  notifications Notification[]
+  uploads       LeaveDocument[]
+
+  @@index([managerId])
+  @@index([departmentId])
+}
+
+model LeaveRequest {
+  id                  String        @id @default(uuid())
+  employeeId          String
+  employee            User          @relation(fields: [employeeId], references: [id])
+  fromDate            DateTime      @db.Date
+  toDate              DateTime      @db.Date
+  reason              String
+  daysCount           Int
+  requiresHodApproval Boolean
+  status              LeaveStatus
+  approvalStage       ApprovalStage
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  documents LeaveDocument[]
+  actions   ApprovalAction[]
+
+  @@index([employeeId])
+  @@index([status, approvalStage])
+  @@index([fromDate, toDate])
+}
+
+model LeaveDocument {
+  id             String       @id @default(uuid())
+  leaveRequestId String
+  leaveRequest   LeaveRequest @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
+  originalName   String
+  mimeType       String
+  fileSize       Int
+  storageKey     String       @unique
+  uploadedById   String
+  uploadedBy     User         @relation(fields: [uploadedById], references: [id])
+  createdAt      DateTime     @default(now())
+
+  @@index([leaveRequestId])
+}
+
+model ApprovalAction {
+  id             String        @id @default(uuid())
+  leaveRequestId String
+  leaveRequest   LeaveRequest  @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
+  actorId        String
+  actor          User          @relation(fields: [actorId], references: [id])
+  actorRole      Role
+  action         ActionType
+  stage          ApprovalStage // stage the action was taken at
+  comment        String?
+  createdAt      DateTime      @default(now())
+
+  @@index([leaveRequestId, createdAt])
+}
+
+// Append-only: a DB trigger (see migration) rejects UPDATE and DELETE.
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  entityType String
+  entityId   String
+  action     String
+  oldValue   Json?
+  newValue   Json?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId, createdAt])
+}
+
+model Notification {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  message         String
+  type            String
+  relatedEntityId String?
+  isRead          Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@index([userId, isRead, createdAt])
+}
+
+model LeavePolicy {
+  id                 String   @id @default(uuid())
+  longLeaveThreshold Int      @default(3)
+  dayCountingMethod  String   @default("CALENDAR")
+  documentRequired   Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}

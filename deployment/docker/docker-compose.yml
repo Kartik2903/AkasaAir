@@ -1,0 +1,17 @@
+# `npm run db:up` starts only the database. `docker compose -f deployment/docker/docker-compose.yml up --build` also runs the API.
+services:
+  db:
+    image: postgres:16-alpine
+    environment: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: leaveflow }
+    ports: ["5433:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U postgres"], interval: 5s, retries: 10 }
+  api:
+    build: { context: ../.., dockerfile: deployment/docker/Dockerfile.server }
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/leaveflow?schema=public
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET (32+ chars)}
+      CLIENT_ORIGIN: http://localhost:5173
+    ports: ["4000:4000"]
+volumes: { pgdata: {} }
