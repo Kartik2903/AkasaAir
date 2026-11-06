@@ -3,7 +3,7 @@ import { env } from './config/env.js';
 import { logger } from './config/logger.js';
 import { prisma } from './config/prisma.js';
 
-const server = app.listen(env.PORT, () => logger.info(`API listening on :${env.PORT} (${env.NODE_ENV}, auth ${env.AUTH_ENABLED ? 'on' : 'off'})`));
+const server = app.listen(env.PORT, () => logger.info(`API listening on :${env.PORT} (${env.NODE_ENV})`));
 
 const shutdown = (signal) => {
   logger.info(`${signal} received, shutting down`);

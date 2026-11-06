@@ -1,0 +1,31 @@
+app = "leaveflow-kartik"
+primary_region = "sin"
+
+[build]
+
+[env]
+  NODE_ENV = "production"
+  PORT = "8080"
+  COOKIE_SAMESITE = "lax"
+
+[deploy]
+  release_command = "npx prisma migrate deploy --schema server/prisma/schema.prisma"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.checks]
+    [http_service.checks.health]
+      grace_period = "20s"
+      interval = "30s"
+      timeout = "5s"
+      method = "GET"
+      path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

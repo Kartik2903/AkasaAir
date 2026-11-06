@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -28,5 +30,11 @@ app.get('/health', async (_req, res) => {
 // Swagger UI needs inline scripts, so it gets a relaxed CSP; everything else keeps Helmet defaults.
 app.use('/api/docs', (req, res, next) => { res.removeHeader('Content-Security-Policy'); next(); }, swaggerUi.serve, swaggerUi.setup(openapi));
 app.use('/api', apiLimiter, routes);
+// Single-origin deploy: serve the built React app and fall back to index.html for client routes.
+const dist = path.resolve(import.meta.dirname, '../../client/dist');
+if (fs.existsSync(dist)) {
+  app.use(express.static(dist, { index: false, maxAge: '1h' }));
+  app.get(/^\/(?!api(\/|$)|health$).*/, (_req, res) => res.sendFile(path.join(dist, 'index.html')));
+}
 app.use(notFound);
 app.use(errorHandler);
