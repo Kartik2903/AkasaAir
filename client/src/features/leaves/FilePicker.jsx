@@ -17,7 +17,7 @@ export function FilePicker({ files, onChange, error }) {
   return (
     <div>
       <label htmlFor={id} className="mb-1.5 block text-sm font-semibold">Supporting documents</label>
-      <label htmlFor={id} className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-field bg-surface px-3 py-3 text-sm text-muted transition-colors duration-150 hover:bg-surface-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent">
+      <label htmlFor={id} className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-field bg-surface px-3 py-3 text-sm text-muted fade duration-150 hover:bg-surface-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent">
         <Paperclip size={16} aria-hidden /> Choose PDF, JPG or PNG files (5 MB each, up to 5)
         <input id={id} type="file" multiple accept={ACCEPT} className="sr-only" onChange={(e) => { add(e.target.files); e.target.value = ''; }} />
       </label>

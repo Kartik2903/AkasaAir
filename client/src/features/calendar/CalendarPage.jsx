@@ -60,7 +60,7 @@ export default function CalendarPage({ title = 'Team calendar' }) {
                   const entries = on(day);
                   return (
                     <button key={day} role="gridcell" aria-selected={day === selected} aria-label={`${formatDay(day)}, ${entries.length} on leave`} onClick={() => setSelected(day)}
-                      className={cn('flex min-h-14 cursor-pointer flex-col items-start justify-start bg-surface p-1 text-left transition-colors duration-150 hover:bg-surface-2 sm:min-h-20 sm:p-1.5', day === selected && 'outline-2 -outline-offset-2 outline-accent')}>
+                      className={cn('flex min-h-14 cursor-pointer flex-col items-start justify-start bg-surface p-1 text-left fade duration-150 hover:bg-surface-2 sm:min-h-20 sm:p-1.5', day === selected && 'outline-2 -outline-offset-2 outline-accent')}>
                       <span className={cn('tnum text-xs', day === todayIso ? 'font-bold text-accent' : 'text-muted')}>{Number(day.slice(8))}</span>
                       <span className="mt-1 hidden flex-col gap-0.5 sm:flex">
                         {entries.slice(0, 2).map((e) => (

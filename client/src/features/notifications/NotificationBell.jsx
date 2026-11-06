@@ -49,7 +49,7 @@ export function NotificationBell() {
             {!data?.data?.length && <li className="px-4 py-8 text-center text-sm text-muted">You are all caught up.</li>}
             {data?.data?.slice(0, 6).map((n) => (
               <li key={n.id}>
-                <button onClick={() => openItem(n)} className={cn('block w-full cursor-pointer px-4 py-3 text-left transition-colors duration-150 hover:bg-surface-2', !n.isRead && 'bg-accent-soft/50')}>
+                <button onClick={() => openItem(n)} className={cn('block w-full cursor-pointer px-4 py-3 text-left fade duration-150 hover:bg-surface-2', !n.isRead && 'bg-accent-soft/50')}>
                   <p className="flex items-center justify-between gap-2 text-sm"><span className={cn(!n.isRead && 'font-semibold')}>{n.title}</span>{!n.isRead && <span className="text-xs font-semibold text-accent">New</span>}</p>
                   <p className="mt-0.5 line-clamp-2 text-xs text-muted">{n.message}</p>
                   <p className="mt-1 text-xs text-muted">{formatRelative(n.createdAt)}</p>

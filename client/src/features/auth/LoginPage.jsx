@@ -34,8 +34,8 @@ export function LoginPage() {
         <h1 className="text-2xl">Sign in</h1>
         <p className="mt-1 text-sm text-muted">Use your work email to continue.</p>
       </div>
-      <FormField label="Email" error={errors.email?.message}><Input type="email" autoComplete="email" {...register('email')} /></FormField>
-      <FormField label="Password" error={errors.password?.message}><Input type="password" autoComplete="current-password" {...register('password')} /></FormField>
+      <FormField label="Email" error={errors.email?.message}><Input type="email" autoComplete="email" placeholder="you@company.com" {...register('email')} /></FormField>
+      <FormField label="Password" error={errors.password?.message}><Input type="password" autoComplete="current-password" placeholder="Enter your password" {...register('password')} /></FormField>
       <Button type="submit" className="w-full" disabled={isSubmitting}>{isSubmitting ? 'Signing in…' : 'Sign in'}</Button>
       {import.meta.env.DEV && (
         <div className="rounded-md border border-line bg-surface-2 p-3 text-sm">

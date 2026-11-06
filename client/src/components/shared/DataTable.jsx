@@ -37,7 +37,7 @@ export function DataTable({ columns, rows, loading, error, onRetry, empty, sort,
                 </tr>
               ))
             : rows.map((r) => (
-                <tr key={rowKey(r)} className="border-b border-line transition-colors duration-150 last:border-0 hover:bg-surface-2">
+                <tr key={rowKey(r)} className="border-b border-line fade duration-150 last:border-0 hover:bg-surface-2">
                   {columns.map((c) => <td key={c.key} className={cn('px-4 py-3', c.className)}>{c.cell ? c.cell(r) : r[c.key]}</td>)}
                 </tr>
               ))}

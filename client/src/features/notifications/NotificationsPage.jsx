@@ -26,7 +26,7 @@ export default function NotificationsPage() {
             <ul className="divide-y divide-line">
               {data.data.map((n) => (
                 <li key={n.id}>
-                  <button onClick={() => open(n)} className="flex w-full cursor-pointer items-start gap-3 px-5 py-4 text-left transition-colors duration-150 hover:bg-surface-2">
+                  <button onClick={() => open(n)} className="flex w-full cursor-pointer items-start gap-3 px-5 py-4 text-left fade duration-150 hover:bg-surface-2">
                     <span className={cn('mt-1.5 h-2 w-2 shrink-0 rounded-full', n.isRead ? 'bg-transparent' : 'bg-accent')} aria-hidden />
                     <span className="min-w-0 flex-1">
                       <span className={cn('block text-sm', !n.isRead && 'font-semibold')}>{n.title}{!n.isRead && <span className="sr-only"> (unread)</span>}</span>

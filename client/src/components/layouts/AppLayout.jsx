@@ -53,7 +53,7 @@ export function AppLayout() {
         <nav aria-label="Main" className="space-y-1">
           {nav.map(({ to, label, icon: Icon, end }) => (
             <NavLink key={to} to={to} end={end} onClick={() => setOpen(false)}
-              className={({ isActive }) => cn('flex h-10 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors duration-150', isActive ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-surface-2 hover:text-ink')}>
+              className={({ isActive }) => cn('flex h-10 items-center gap-3 rounded-md px-3 text-sm font-semibold fade duration-150', isActive ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-surface-2 hover:text-ink')}>
               <Icon size={18} aria-hidden /> {label}
             </NavLink>
           ))}
