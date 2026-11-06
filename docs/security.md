@@ -14,7 +14,8 @@ Implemented, with the test that covers it where one exists (`server/tests/workfl
 
 Limits and decisions for you
 - No CSRF token: protection is SameSite + restricted CORS. With `COOKIE_SAMESITE=none` (frontend and API on different sites) SameSite no longer protects; prefer one domain via a reverse proxy.
-- No account lockout, MFA, password reset or refresh tokens. Demo users share a known password: never seed them in production.
-- Local-disk files are not encrypted or virus-scanned. Use object storage with server-side encryption and a malware scan for real data.
+- No account lockout, MFA, password reset or refresh tokens. Demo users share a known password (`Password@123`), and the login screen advertises them on purpose so assessors can sign in without registering. The seeded data is throwaway; change or delete those users before any real use.
+- Documents live in Cloudflare R2 (private bucket, accessed only with server-side credentials, never public URLs) or on local disk when R2 is not configured. Files are not virus-scanned; add malware scanning for real data. R2 encrypts at rest by default.
+- The R2 credentials, `JWT_SECRET` and the database URL exist only as server environment variables (Render dashboard / local `.env`, which is git-ignored).
 - In-memory rate limiter is per instance.
 - Documents may contain sensitive health information; retention and access policy are out of scope here.

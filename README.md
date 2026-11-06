@@ -2,9 +2,24 @@
 
 A leave management system with role-based approvals, document uploads, an approval timeline, audit history, notifications, a team calendar and dashboards. Built as a Phase 1 (P0 + P1) assessment project on a React + Express + PostgreSQL monorepo.
 
+**Live:** https://leaveflow.onrender.com (Render free tier, so the first request after idle can take about a minute). Sign in with the demo accounts below; the login screen lists them too, because there is no public sign-up.
+
 ![Employee: apply with live validation](docs/screenshots/apply-needs-doc.png)
 ![Request detail with approval timeline](docs/screenshots/emp-final-detail.png)
 ![Manager dashboard](docs/screenshots/mgr-dashboard.png)
+
+## Documentation
+| Doc | What it covers |
+|---|---|
+| [docs/features.md](docs/features.md) | every feature and the main functions behind it |
+| [docs/api-documentation.md](docs/api-documentation.md) | all endpoints, errors, examples |
+| [docs/architecture.md](docs/architecture.md) | layers, key mechanisms, runtime shape |
+| [docs/database-design.md](docs/database-design.md) | models, indexes, the audit trigger |
+| [docs/security.md](docs/security.md) | what is protected and the known limits |
+| [docs/testing.md](docs/testing.md) | how to run tests and what they cover |
+| [docs/deployment.md](docs/deployment.md) | Render + Supabase + R2, rebuild and troubleshooting |
+| [docs/ui-system.md](docs/ui-system.md) | design tokens and UI checks |
+| [docs/decisions.md](docs/decisions.md) | decisions and assumptions |
 
 ## Features
 **P0**
@@ -25,7 +40,7 @@ A leave management system with role-based approvals, document uploads, an approv
 **Deferred (P2, not built):** AI policy copilot, AI summaries/recommendations/analytics queries, predictive insights, CSV/PDF export.
 
 ## Stack
-React 19, Vite 8, Tailwind 4, shadcn-style components (Radix), TanStack Query, Axios, React Hook Form + Zod, Recharts, Lucide / Node 22+, Express 5, Prisma 6, PostgreSQL 16, Zod, multer, bcrypt, jsonwebtoken, Helmet, pino / Vitest, Supertest, Testing Library. The code is JavaScript (ESM), not TypeScript, to keep the 3-hour budget.
+Deployed on Render (one Docker service) with Supabase PostgreSQL and Cloudflare R2 for documents. React 19, Vite 8, Tailwind 4, shadcn-style components (Radix), TanStack Query, Axios, React Hook Form + Zod, Recharts, Lucide / Node 22+, Express 5, Prisma 6, PostgreSQL 16, Zod, multer, bcrypt, jsonwebtoken, Helmet, pino / Vitest, Supertest, Testing Library. The code is JavaScript (ESM), not TypeScript, to keep the 3-hour budget.
 
 ## Quick start
 ```bash
@@ -39,6 +54,8 @@ npm run dev                          # API http://localhost:4000, web http://loc
 API docs (Swagger UI): http://localhost:4000/api/docs
 
 ### Demo credentials (password for all: `Password@123`)
+These are demo accounts for quick testing: there is no public registration, so assessors sign in with them. The data is throwaway.
+
 | Role | Email | Notes |
 |---|---|---|
 | Employee | employee@leaveflow.dev (Esha Rao) | has a pending short request and one waiting for her reply |
@@ -68,6 +85,8 @@ Who approves: the manager stage belongs to `employee.managerId`, the HOD stage t
 Route -> middleware (session, role, validation, upload) -> controller -> service -> Prisma -> PostgreSQL
 server/src/{domain,services,controllers,routes,middlewares,validators,utils,config,docs}
 client/src/{features/{auth,leaves,dashboard,calendar,notifications,audit},components/{ui,shared,layouts},services,hooks,lib,routes}
+Dockerfile, render.yaml            one image serving API + built client on Render
+server/prisma/{schema.prisma,migrations,seed.js}
 ```
 Business rules live in `server/src/domain` and `services`; React only renders what the API returns (including the preview and the per-request `permissions`). Access scope has one source of truth, `services/access.service.js`, used by lists and single-record checks. Out-of-scope records return 404, not 403. More in [docs/architecture.md](docs/architecture.md).
 
@@ -87,7 +106,7 @@ See [.env.example](.env.example): `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`
 Server tests need a database `leaveflow_test` (see [docs/testing.md](docs/testing.md)). The suite covers the 20 required scenarios. Last run in this repo: server 41/41, client 8/8, lint clean, production build succeeds, plus a scripted browser run of the four-day lifecycle (apply with document, manager approve, HOD request info, employee respond, HOD approve) with desktop and 375px screenshots.
 
 ## Deployment
-Render (one Docker service, root `Dockerfile` + `render.yaml`) with Supabase Postgres and Cloudflare R2 for documents. Steps and checklist: [docs/deployment.md](docs/deployment.md). Nothing has been deployed from this repo yet, so no live URL exists. Without the three R2 env vars, documents use local disk, which is ephemeral on Render.
+Live at https://leaveflow.onrender.com: one Docker service on Render (root `Dockerfile` + `render.yaml`) that serves the API and the built React app, with Supabase PostgreSQL (session pooler) and Cloudflare R2 for documents. The service was deployed by the project owner; the automated tests here run against local databases, not the live service. Steps, environment variables, rebuild and troubleshooting: [docs/deployment.md](docs/deployment.md). Without the three R2 variables, documents fall back to local disk, which is ephemeral on Render.
 
 ## Known limitations
 - Calendar-day counting only; no holiday/weekend handling or leave balances/quotas.

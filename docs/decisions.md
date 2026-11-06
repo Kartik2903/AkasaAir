@@ -14,3 +14,8 @@
 | 10 | Storage adapter: Cloudflare R2 when configured, else local disk | Same save/read/remove interface; Render's disk is ephemeral. |
 | 11 | Accent changed from the starter's orange to indigo, tokens only | Matches the requested restrained palette. |
 | 12 | Fresh `leaveflow` databases instead of resetting the old one | `prisma migrate reset` needs explicit consent; the old starter DB is untouched. |
+| 13 | One Docker image serves the API and the built client | Single origin, first-party cookie, one Render service. |
+| 14 | Render + Supabase + R2 instead of Fly.io | Fly flagged the account for verification; Supabase and R2 were already set up. |
+| 15 | Supabase session pooler with `connection_limit=3` | Direct connections are IPv6-only; Prisma's default pool exceeds the pooler's session limit. |
+| 16 | Demo accounts shown on the production login screen | Assessors cannot register; the data is throwaway. Documented in security.md. |
+| 17 | Removed template leftovers (AWS notes, starter docs, unused helpers) | Keeps the repo about LeaveFlow only. |

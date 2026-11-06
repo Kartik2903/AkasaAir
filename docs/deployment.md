@@ -1,6 +1,8 @@
 # Deployment
 
-Target: **Render** (one Docker web service: API plus the built React app) with **Supabase** Postgres and **Cloudflare R2** for documents. Status: the Docker image was built and run locally against Postgres; nothing is deployed from this repo yet, so no live URL is claimed.
+Live: https://leaveflow.onrender.com (deployed by the project owner on Render's free tier; the automated tests in this repo were not run against it).
+
+Target: **Render** (one Docker web service: API plus the built React app) with **Supabase** Postgres and **Cloudflare R2** for documents. The Docker image was built and run locally against Postgres.
 
 ## Environment variables
 | Var | Notes |
@@ -31,3 +33,11 @@ Free Render web services sleep after inactivity; the first request wakes them (a
 
 ## Local
 `npm run db:up` starts Postgres on port 5433. Build and run the image locally with `docker build -t leaveflow .`.
+
+## Rebuilding and troubleshooting
+- **Redeploy:** pushing to `main` redeploys automatically. To rebuild without a push: Render dashboard, the `leaveflow` service, **Manual Deploy**, **Deploy latest commit** (or **Clear build cache & deploy**).
+- **Change an environment variable:** service, **Environment**, edit, save (Render redeploys).
+- **`CLIENT_ORIGIN`** must equal the service URL, with no trailing slash.
+- **Database unreachable:** the URL must be the session pooler string with the password URL-encoded and `?connection_limit=3` at the end.
+- **First request slow:** free services sleep when idle.
+- **Schema change:** run `npm run db:deploy` against Supabase before deploying code that needs it.

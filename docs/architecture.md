@@ -13,7 +13,7 @@ Request -> Route -> Middleware (rate limit, authenticate, authorize, upload, val
 | Services | `services/` | `leave.service` (submit, decide, respond, cancel, list, detail), `access.service` (visibility + approver rules), `insights.service` (dashboards, analytics, calendar, notifications, audit feed), `document.service` (signature check, storage), `leaveEvents` (timeline + audit + notification writes) |
 | Controllers/Routes | `controllers/`, `routes/index.js` | HTTP mapping; role gates |
 | Middleware | `middlewares/` | session auth, role authorize, Zod validate, multer upload, rate limits, error handler |
-| Storage | `utils/storage.js` | local-disk adapter; swap for S3 here |
+| Storage | `utils/storage.js` | `save/read/remove` adapter: Cloudflare R2 when its three env vars are set, else local disk |
 
 ## Key mechanisms
 - **Scope**: `visibleWhere(user)` (employee: own; manager: own and reports'; HOD: department) and `approverWhere(user)` (requests currently waiting on me) are reused by every list and by single-record loading (`loadVisibleRequest`, 404 if out of scope).
@@ -24,3 +24,9 @@ Request -> Route -> Middleware (rate limit, authenticate, authorize, upload, val
 - **Frontend**: TanStack Query for server state; one mutation helper invalidates leaves, detail, dashboards, analytics, notifications, calendar and audit together. List filters live in the URL (`useListParams`). Role navigation in `AppLayout`; routes are role-gated and lazy-loaded.
 
 Extensibility for P2: services are the only place that read/write leave data, so an AI summary or policy copilot can be added as another service that consumes `leaveService.get` and `LeavePolicy` without touching the workflow.
+
+## Runtime and deployment shape
+- **One origin.** In production Express serves the built React app (`client/dist`) and falls back to `index.html` for client routes, and serves the API under `/api`. The browser and API share an origin, so the session cookie is first-party (`COOKIE_SAMESITE=lax`) and CORS is not involved.
+- **One image.** The root `Dockerfile` builds the client in a first stage and ships only the server, its production dependencies and `client/dist` in the second. Migrations are run separately with `npm run db:deploy`.
+- **External services.** PostgreSQL on Supabase (session pooler), documents on Cloudflare R2, hosting on Render. See [deployment.md](deployment.md).
+- **Further reading:** [features.md](features.md) explains each feature and function; [api-documentation.md](api-documentation.md) lists the endpoints.
