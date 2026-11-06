@@ -2,7 +2,10 @@
 
 A leave management system with role-based approvals, document uploads, an approval timeline, audit history, notifications, a team calendar and dashboards. Built as a Phase 1 (P0 + P1) assessment project on a React + Express + PostgreSQL monorepo.
 
-**Live:** https://leaveflow.onrender.com (Render free tier, so the first request after idle can take about a minute). Sign in with the demo accounts below; the login screen lists them too, because there is no public sign-up.
+## Live application
+**URL: https://leaveflow.onrender.com**
+
+Demo logins (password for all: `Password@123`): `employee@leaveflow.dev`, `manager@leaveflow.dev`, `hod@leaveflow.dev`. The login screen lists them too, because there is no public sign-up. The site runs on Render's free tier, so the first request after idle can take about a minute.
 
 ![Employee: apply with live validation](docs/screenshots/apply-needs-doc.png)
 ![Request detail with approval timeline](docs/screenshots/emp-final-detail.png)
