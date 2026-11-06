@@ -8,6 +8,10 @@ const schema = z.object({
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   JWT_EXPIRES_IN: z.string().default('1d'),
   COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),
+  // Cloudflare R2 (S3-compatible). STORAGE_BUCKET_API = https://<account>.r2.cloudflarestorage.com/<bucket>. Unset = local disk.
+  STORAGE_BUCKET_API: z.string().url().optional(),
+  R2_ACCESS_KEY_ID: z.string().optional(),
+  R2_SECRET_ACCESS_KEY: z.string().optional(),
   UPLOAD_DIR: z.string().default('uploads'), // local disk; use object storage (S3) when deployed
 });
 

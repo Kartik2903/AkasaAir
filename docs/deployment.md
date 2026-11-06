@@ -21,7 +21,7 @@ Status: configs are prepared; **no cloud deployment was performed**, so no URL i
 3. After first deploy set `CLIENT_ORIGIN` (API) to the static site URL and `VITE_API_URL` (static site) to the API URL, then redeploy both. `VITE_*` is baked at build time.
 4. Migrations: the start command runs `prisma migrate deploy` (never `migrate dev`). Paid plans can use `preDeployCommand` instead.
 5. Users: there is no registration. Create real users in the database; the demo seed (known password) is for local use only.
-6. **Documents**: Render's disk is ephemeral, so uploaded files vanish on redeploy. Either attach a persistent disk (paid) and set `UPLOAD_DIR` to its mount path, or implement `server/src/utils/storage.js` with S3 (save/read/remove).
+6. **Documents**: Render's disk is ephemeral, so uploaded files vanish on redeploy. Set `STORAGE_BUCKET_API` (`https://<account>.r2.cloudflarestorage.com/<bucket>`), `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` to store documents in Cloudflare R2 (adapter in `server/src/utils/storage.js`), or attach a persistent disk and set `UPLOAD_DIR`.
 
 Monorepo notes: build commands run from the repo root with workspaces (`npm ci`, `-w client`); the static publish dir is `client/dist`; the SPA rewrite handles deep links. Free Postgres expires after 30 days; free web services sleep after idle.
 

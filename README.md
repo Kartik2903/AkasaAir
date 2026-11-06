@@ -78,7 +78,7 @@ Department, User (self-referencing manager), LeaveRequest, LeaveDocument, Approv
 `/api/*`, consistent envelope `{ success, message, data, meta }` / `{ success:false, message, errors:[{field,message}] }`. Full list in [docs/api-documentation.md](docs/api-documentation.md) and Swagger at `/api/docs`.
 
 ## Environment variables
-See [.env.example](.env.example): `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `CLIENT_ORIGIN`, `COOKIE_SAMESITE`, `UPLOAD_DIR`, `PORT`, `NODE_ENV`, and `VITE_API_URL` (frontend build only).
+See [.env.example](.env.example): `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `CLIENT_ORIGIN`, `COOKIE_SAMESITE`, `STORAGE_BUCKET_API` + `R2_ACCESS_KEY_ID` + `R2_SECRET_ACCESS_KEY` (Cloudflare R2; all three set = documents go to R2, otherwise local disk via `UPLOAD_DIR`), `PORT`, `NODE_ENV`, and `VITE_API_URL` (frontend build only).
 
 ## Commands
 `npm run dev | build | start | lint | test | test:coverage | db:up | db:migrate | db:deploy | db:seed`
@@ -87,12 +87,12 @@ See [.env.example](.env.example): `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`
 Server tests need a database `leaveflow_test` (see [docs/testing.md](docs/testing.md)). The suite covers the 20 required scenarios. Last run in this repo: server 41/41, client 8/8, lint clean, production build succeeds, plus a scripted browser run of the four-day lifecycle (apply with document, manager approve, HOD request info, employee respond, HOD approve) with desktop and 375px screenshots.
 
 ## Deployment
-Render Blueprint in `deployment/render/render.yaml`; AWS alternative and **document storage warning** in [docs/deployment.md](docs/deployment.md). Nothing has been deployed from this repo, so no live URL exists. Uploaded files use local disk, which is ephemeral on Render without a persistent disk; use S3 for any real deployment.
+Render Blueprint in `deployment/render/render.yaml`; AWS alternative and **document storage warning** in [docs/deployment.md](docs/deployment.md). Nothing has been deployed from this repo, so no live URL exists. Documents go to Cloudflare R2 when its three env vars are set; the local-disk fallback is ephemeral on Render.
 
 ## Known limitations
 - Calendar-day counting only; no holiday/weekend handling or leave balances/quotas.
 - HODs cannot request leave. One department per user, one HOD per department.
-- Local-disk document storage (S3 adapter point: `server/src/utils/storage.js`).
+- R2 storage is selected by env vars in `server/src/utils/storage.js`; the R2 path is not covered by automated tests (tests use local disk).
 - Notifications are in-app only (30 s polling, no email/push). No password reset or user administration UI; users come from the seed.
 - In-memory rate limiter (per instance); no CSRF token (SameSite cookie + restricted CORS).
 - Hallmark's render lint was run on the public login page only; signed-in pages were reviewed from screenshots, not linted.

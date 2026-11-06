@@ -20,7 +20,7 @@ export default function AuditPage() {
     { key: 'createdAt', header: 'When', cell: (a) => <span className="tnum text-muted">{formatDateTime(a.createdAt)}</span> },
     { key: 'actor', header: 'Who', cell: (a) => a.actor?.name ?? 'System' },
     { key: 'action', header: 'Event', cell: (a) => pretty(a.action) },
-    { key: 'employeeName', header: 'Request', cell: (a) => <Link className="font-semibold text-accent underline underline-offset-2" to={`/requests/${a.entityId}`}>{a.employeeName}</Link> },
+    { key: 'employeeName', header: 'Request', cell: (a) => <Link className="whitespace-nowrap font-semibold text-accent underline underline-offset-2" to={`/requests/${a.entityId}`}>{a.employeeName}</Link> },
     { key: 'detail', header: 'Details', cell: (a) => <span className="text-muted">{a.metadata?.comment ?? a.metadata?.originalName ?? (a.newValue?.status ? pretty(a.newValue.status) : '')}</span> },
   ];
   return (
