@@ -37,15 +37,13 @@ export function LoginPage() {
       <FormField label="Email" error={errors.email?.message}><Input type="email" autoComplete="email" placeholder="you@company.com" {...register('email')} /></FormField>
       <FormField label="Password" error={errors.password?.message}><Input type="password" autoComplete="current-password" placeholder="Enter your password" {...register('password')} /></FormField>
       <Button type="submit" className="w-full" disabled={isSubmitting}>{isSubmitting ? 'Signing in…' : 'Sign in'}</Button>
-      {import.meta.env.DEV && (
-        <div className="rounded-md border border-line bg-surface-2 p-3 text-sm">
+      <div className="rounded-md border border-line bg-surface-2 p-3 text-sm">
           <p className="font-semibold">Demo accounts</p>
-          <p className="mt-0.5 text-muted">Fills the form. Password: Password@123</p>
+          <p className="mt-0.5 text-muted">Demo accounts for quick testing, since there is no public sign-up. Pick a role to fill the form. Password: Password@123</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {DEMO.map(([label, email]) => <Button key={email} type="button" variant="outline" size="sm" onClick={() => fillDemo(email)}>{label}</Button>)}
           </div>
-        </div>
-      )}
+      </div>
     </form>
   );
 }
