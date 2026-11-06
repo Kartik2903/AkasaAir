@@ -11,7 +11,7 @@ Source of truth: `server/prisma/schema.prisma`; migration `server/prisma/migrati
 | ApprovalAction | timeline: `actorId`, `actorRole`, `action` (SUBMITTED, APPROVED, REJECTED, INFO_REQUESTED, COMMENT, EMPLOYEE_RESPONSE, CANCELLED), `stage`, `comment`; index `(leaveRequestId, createdAt)` |
 | AuditLog | `actorId?`, `entityType`, `entityId`, `action`, `oldValue`/`newValue`/`metadata` JSON; index `(entityType, entityId, createdAt)`; **append-only trigger** |
 | Notification | `userId`, `title`, `message`, `type`, `relatedEntityId`, `isRead`; index `(userId, isRead, createdAt)` |
-| LeavePolicy | `longLeaveThreshold` (3), `dayCountingMethod` (`CALENDAR`), `documentRequired` (true) |
+| LeavePolicy | `longLeaveThreshold` (3), `dayCountingMethod` (`WORKING_DAYS`; `CALENDAR` also supported), `documentRequired` (true) |
 
 Enums: `Role`, `LeaveStatus` (PENDING_MANAGER, PENDING_HOD, NEEDS_INFO, APPROVED, REJECTED, CANCELLED), `ApprovalStage` (MANAGER, HOD, NONE), `ActionType`.
 

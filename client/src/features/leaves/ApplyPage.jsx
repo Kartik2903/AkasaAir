@@ -27,7 +27,7 @@ function PreviewPanel({ preview, loading, hasDates, filesCount }) {
   return (
     <div className="space-y-3" aria-live="polite">
       {preview.valid && preview.days ? (
-        <p className="tnum text-3xl font-semibold">{preview.days}<span className="ml-1.5 text-base font-medium text-muted">{preview.days === 1 ? 'day' : 'days'}</span></p>
+        <p className="tnum text-3xl font-semibold">{preview.days}<span className="ml-1.5 text-base font-medium text-muted">{preview.days === 1 ? 'working day' : 'working days'}</span></p>
       ) : null}
       <ul className="space-y-2 text-sm">
         {preview.messages.map((m, i) => {

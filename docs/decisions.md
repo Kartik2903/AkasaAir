@@ -19,3 +19,4 @@
 | 15 | Supabase session pooler with `connection_limit=3` | Direct connections are IPv6-only; Prisma's default pool exceeds the pooler's session limit. |
 | 16 | Demo accounts shown on the production login screen | Assessors cannot register; the data is throwaway. Documented in security.md. |
 | 17 | Removed template leftovers (AWS notes, starter docs, unused helpers) | Keeps the repo about LeaveFlow only. |
+| 18 | Weekends excluded from leave days (`WORKING_DAYS`), replacing decision 2's calendar days | Requested by the project owner. Also applies to the over-3-days rule. |

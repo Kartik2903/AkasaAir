@@ -7,7 +7,7 @@ import { visibleWhere, approverWhere, loadVisibleRequest, isApprover, approverId
 import { documentService } from './document.service.js';
 import { recordEvent, writeAudit, snapshot } from './leaveEvents.js';
 
-const DEFAULT_POLICY = { longLeaveThreshold: 3, dayCountingMethod: 'CALENDAR', documentRequired: true };
+const DEFAULT_POLICY = { longLeaveThreshold: 3, dayCountingMethod: 'WORKING_DAYS', documentRequired: true };
 const getPolicy = async (db = prisma) => (await db.leavePolicy.findFirst()) ?? DEFAULT_POLICY;
 
 const toDto = (r) => ({ ...r, fromDate: formatDate(r.fromDate), toDate: formatDate(r.toDate) });
@@ -31,9 +31,10 @@ async function preview(user, { fromDate, toDate }) {
   const ctx = await employeeCtx(user);
   if (!ctx?.manager) return { valid: false, messages: ['You have no reporting manager assigned, so a request cannot be routed.'] };
   const days = countDays(from, to, policy.dayCountingMethod);
+  if (days === 0) return { valid: false, messages: ['These dates fall on a weekend, so no leave is needed.'] };
   const plan = planLeave({ days, policy, approverIsHod: ctx.manager.role === 'HOD' });
   const overlap = await findOverlap(prisma, user.id, from, to);
-  messages.push(`This request covers ${days} consecutive ${days === 1 ? 'day' : 'days'}.`);
+  messages.push(`This request covers ${days} working ${days === 1 ? 'day' : 'days'} (weekends are not counted).`);
   messages.push(plan.requiresHodApproval ? 'This request requires manager and HOD approval.' : 'Manager approval is required.');
   if (plan.requiresDocument) messages.push('A supporting document is required for this request.');
   if (overlap) messages.push(`You already have an overlapping leave request (${formatDate(overlap.fromDate)} to ${formatDate(overlap.toDate)}).`);
@@ -55,6 +56,7 @@ async function create(user, { fromDate, toDate, reason }, files) {
   const ctx = await employeeCtx(user);
   if (!ctx?.manager) throw ApiError.badRequest('You have no reporting manager assigned');
   const days = countDays(from, to, policy.dayCountingMethod);
+  if (days === 0) throw ApiError.badRequest('Validation failed', [{ field: 'body.fromDate', message: 'These dates fall on a weekend, so no leave is needed' }]);
   const plan = planLeave({ days, policy, approverIsHod: ctx.manager.role === 'HOD' });
   if (plan.requiresDocument && !files?.length)
     throw ApiError.badRequest('Validation failed', [{ field: 'documents', message: `A supporting document is required for leave longer than ${policy.longLeaveThreshold} days` }]);

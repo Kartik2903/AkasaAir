@@ -9,9 +9,9 @@ LeaveFlow is an employee leave management system. Three roles use it: **EMPLOYEE
 
 ## 2. Applying for leave
 - **Form** (`/apply`): from date, to date, reason (5+ characters) and documents (PDF, JPG or PNG, 5 MB each, up to 5).
-- **Duration:** inclusive calendar days, so 10 Nov to 10 Nov is 1 day and 10 Nov to 13 Nov is 4. Dates are handled as `YYYY-MM-DD` and parsed as UTC, so timezones can never shift a day (`server/src/domain/leaveDuration.js`).
+- **Duration:** inclusive working days. Saturdays and Sundays do not count, so Friday to Tuesday is 3 days, and a weekend-only request is refused. Dates are handled as `YYYY-MM-DD` and parsed as UTC, so timezones can never shift a day (`server/src/domain/leaveDuration.js`).
 - **Live validation preview** (`GET /api/leaves/preview`): while you pick dates, the server reports the number of days, whether a document is required, whether HOD approval is needed, who the approvers are and whether the dates overlap another of your requests. It uses the same rules as the real submit, so the screen shows messages and holds no business logic. Submit stays disabled until a required document is attached.
-- **Rules applied on submit** (`planLeave` in `leaveWorkflow.js`, `leave.service.create`): more than 3 days needs a document and a second (HOD) approval; overlapping requests are rejected with 409, checked inside the transaction behind a per-employee advisory lock so two simultaneous submissions cannot both pass. A manager's own leave goes to the HOD in a single stage. HODs cannot apply (no approver above them).
+- **Rules applied on submit** (`planLeave` in `leaveWorkflow.js`, `leave.service.create`): more than 3 working days needs a document and a second (HOD) approval; overlapping requests are rejected with 409, checked inside the transaction behind a per-employee advisory lock so two simultaneous submissions cannot both pass. A manager's own leave goes to the HOD in a single stage. HODs cannot apply (no approver above them).
 
 ## 3. Approval workflow
 `status` (where the request is) and `approvalStage` (who must act) are separate fields.
@@ -57,7 +57,7 @@ Responsive layout with a role-aware sidebar, dark mode, a Ctrl+K command palette
 ## Main functions (where to look)
 | Function | File | Purpose |
 |---|---|---|
-| `countDays(from, to, method)` | `domain/leaveDuration.js` | inclusive day count, one place to change the counting rule |
+| `countDays(from, to, method)` | `domain/leaveDuration.js` | inclusive working-day count, one place to change the counting rule |
 | `planLeave({days, policy, approverIsHod})` | `domain/leaveWorkflow.js` | decides document and HOD requirements and the first stage |
 | `transition(request, action)` | `domain/leaveWorkflow.js` | the full state machine, or a 409 |
 | `visibleWhere(user)`, `approverWhere(user)` | `services/access.service.js` | scope for lists and "waiting on me" |

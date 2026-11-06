@@ -21,7 +21,9 @@ async function login(key) {
 // Each call uses its own date window so tests never collide on the overlap rule.
 let cursor = 0;
 const window = (nDays) => {
-  const start = new Date(Date.UTC(2032, 0, 1 + cursor)); cursor += nDays + 3;
+  // Starts on a Monday (2032-01-05) and spans nDays calendar days; nDays must stay within Mon-Fri.
+  if (nDays > 5) throw new Error('window() supports up to 5 days');
+  const start = new Date(Date.UTC(2032, 0, 5 + cursor)); cursor += 7;
   const end = new Date(start.getTime() + (nDays - 1) * 86_400_000);
   return { fromDate: start.toISOString().slice(0, 10), toDate: end.toISOString().slice(0, 10) };
 };
@@ -96,9 +98,18 @@ describe('submission rules', () => {
     expect((await ag.emp2.post('/api/leaves').field('fromDate', next).field('toDate', next).field('reason', 'Day after')).status).toBe(201);
   });
   it('preview mirrors submit rules', async () => {
-    const r = await ag.emp.get('/api/leaves/preview').query({ fromDate: '2045-01-01', toDate: '2045-01-04' });
+    const r = await ag.emp.get('/api/leaves/preview').query({ fromDate: '2045-01-02', toDate: '2045-01-05' });
     expect(r.body.data).toMatchObject({ days: 4, requiresDocument: true, requiresHodApproval: true, valid: true });
     expect(r.body.data.messages.join(' ')).toMatch(/manager and HOD/);
+  });
+  it('weekends do not count: Fri-Tue is 3 days, manager only, no document', async () => {
+    const r = await ag.emp.get('/api/leaves/preview').query({ fromDate: '2045-01-06', toDate: '2045-01-10' });
+    expect(r.body.data).toMatchObject({ days: 3, requiresDocument: false, requiresHodApproval: false, valid: true });
+  });
+  it('a weekend-only request is refused', async () => {
+    const q = { fromDate: '2045-01-07', toDate: '2045-01-08' };
+    expect((await ag.emp.get('/api/leaves/preview').query(q)).body.data.valid).toBe(false);
+    expect((await ag.emp.post('/api/leaves').field(q).field('reason', 'Weekend only')).status).toBe(400);
   });
   it('HOD cannot apply for leave', async () => expect((await submit('hod', 2, { file: false })).status).toBe(403));
 });
@@ -202,7 +213,7 @@ describe('authorization and scoping', () => {
     expect((await act('emp2', id, 'approve')).status).toBe(403);
   });
   it('a manager cannot approve their own leave; the HOD does, as a single stage', async () => {
-    const r = await submit('mgr', 6, { file: true });
+    const r = await submit('mgr', 5, { file: true });
     expect(r.body.data.requiresHodApproval).toBe(false);
     expect((await act('mgr', r.body.data.id, 'approve')).status).toBe(403);
     expect((await act('hod', r.body.data.id, 'approve')).body.data.status).toBe('APPROVED');

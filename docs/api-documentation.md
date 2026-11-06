@@ -32,7 +32,7 @@ All routes are under `/api` and need the session cookie except login and logout.
 |---|---|---|---|
 | GET | /leaves/preview?fromDate&toDate | signed in | dry run, never writes (see example) |
 | GET | /leaves | signed in | query: `scope=mine\|pending\|team` (pending/team need MANAGER or HOD), `search` (employee name), `status`, `stage`, `from`, `to`, `sortBy=createdAt\|fromDate`, `sortOrder`, `page`, `limit` (max 100) |
-| POST | /leaves | EMPLOYEE, MANAGER | multipart: `fromDate`, `toDate`, `reason`, `documents[]`. Document required when days > 3 |
+| POST | /leaves | EMPLOYEE, MANAGER | multipart: `fromDate`, `toDate`, `reason`, `documents[]`. Document required when working days > 3 |
 | GET | /leaves/:id | in scope | request + `documents`, `stages`, `timeline`, `permissions` |
 | POST | /leaves/:id/documents | owner, open request | multipart `documents[]` |
 | GET | /leaves/:id/documents/:docId | in scope | file download, `Cache-Control: private, no-store` |
@@ -77,7 +77,7 @@ curl -b jar 'https://leaveflow.onrender.com/api/leaves/preview?fromDate=2026-12-
 ```json
 { "success": true, "data": {
   "valid": true, "days": 4, "requiresDocument": true, "requiresHodApproval": true,
-  "messages": ["This request covers 4 consecutive days.", "This request requires manager and HOD approval.", "A supporting document is required for this request."],
+  "messages": ["This request covers 4 working days (weekends are not counted).", "This request requires manager and HOD approval.", "A supporting document is required for this request."],
   "approvers": [{ "stage": "MANAGER", "name": "Meera Menon" }, { "stage": "HOD", "name": "Harish Oberoi" }],
   "overlap": null } }
 ```

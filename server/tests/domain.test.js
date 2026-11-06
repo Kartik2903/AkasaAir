@@ -3,17 +3,25 @@ import { countDays, parseDate } from '../src/domain/leaveDuration.js';
 import { planLeave, transition } from '../src/domain/leaveWorkflow.js';
 
 const policy = { longLeaveThreshold: 3, documentRequired: true };
-const days = (a, b) => countDays(parseDate(a), parseDate(b));
+const days = (a, b, method) => countDays(parseDate(a), parseDate(b), method);
+
+describe('working days', () => {
+  it('skips Saturday and Sunday', () => {
+    expect(days('2045-01-06', '2045-01-10')).toBe(3); // Fri to Tue
+    expect(days('2045-01-07', '2045-01-08')).toBe(0); // Sat, Sun
+    expect(days('2045-01-02', '2045-01-15')).toBe(10); // two full weeks
+  });
+});
 
 describe('leave duration (inclusive calendar days)', () => {
   it('counts 1, 3 and 4 days', () => {
-    expect(days('2030-11-10', '2030-11-10')).toBe(1);
-    expect(days('2030-11-10', '2030-11-12')).toBe(3);
-    expect(days('2030-11-10', '2030-11-13')).toBe(4);
+    expect(days('2030-11-10', '2030-11-10', 'CALENDAR')).toBe(1);
+    expect(days('2030-11-10', '2030-11-12', 'CALENDAR')).toBe(3);
+    expect(days('2030-11-10', '2030-11-13', 'CALENDAR')).toBe(4);
   });
   it('is safe across month, year and DST boundaries', () => {
-    expect(days('2030-12-30', '2031-01-02')).toBe(4);
-    expect(days('2030-03-30', '2030-04-02')).toBe(4);
+    expect(days('2030-12-30', '2031-01-02', 'CALENDAR')).toBe(4);
+    expect(days('2030-03-30', '2030-04-02', 'CALENDAR')).toBe(4);
   });
   it('rejects impossible dates', () => {
     expect(parseDate('2030-02-30')).toBeNull();

@@ -1,10 +1,19 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { countDays } from '../src/domain/leaveDuration.js';
 
 const prisma = new PrismaClient();
 const iso = (offsetDays) => new Date(Date.now() + offsetDays * 86_400_000).toISOString().slice(0, 10);
 const d = (s) => new Date(`${s}T00:00:00Z`);
-const days = (a, b) => Math.round((d(b) - d(a)) / 86_400_000) + 1;
+const days = (a, b) => countDays(d(a), d(b));
+const isWeekend = (s) => [0, 6].includes(d(s).getUTCDay());
+// Starts on the first weekday at or after the offset and spans the same number of working days as the scenario's offsets.
+function workingRange(a, b) {
+  while (isWeekend(iso(a))) { a += 1; b += 1; }
+  let end = a;
+  for (let left = b - a; left > 0;) { end += 1; if (!isWeekend(iso(end))) left -= 1; }
+  return [iso(a), iso(end)];
+}
 const DEMO_PASSWORD = 'Password@123';
 
 // Idempotent: wipes workflow data and recreates the demo organisation. Audit rows are append-only (DB trigger),
@@ -41,7 +50,7 @@ async function main() {
   ];
 
   for (const [e, a, b, status, stage, reason, history] of scenarios) {
-    const from = iso(a); const to = iso(b); const n = days(from, to);
+    const [from, to] = workingRange(a, b); const n = days(from, to);
     const r = await prisma.leaveRequest.create({ data: { employeeId: e.id, fromDate: d(from), toDate: d(to), reason, daysCount: n, requiresHodApproval: n > 3, status, approvalStage: stage, createdAt: new Date(Date.now() - 6 * 3600_000) } });
     const log = (actor, role, action, st, comment, ago) => Promise.all([
       prisma.approvalAction.create({ data: { leaveRequestId: r.id, actorId: actor.id, actorRole: role, action, stage: st, comment, createdAt: new Date(Date.now() - ago * 60_000) } }),

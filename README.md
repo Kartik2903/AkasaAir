@@ -28,7 +28,7 @@ Demo logins (password for all: `Password@123`): `employee@leaveflow.dev`, `manag
 **P0**
 - Login with JWT in an HttpOnly cookie; roles EMPLOYEE, MANAGER, HOD enforced on the backend (scope checks per team/department)
 - Apply for leave with PDF/JPG/PNG documents (5 MB, file signature verified), request history and status
-- Manager approve / reject / request info; HOD stage only for leave longer than 3 consecutive days
+- Manager approve / reject / request info; HOD stage only for leave longer than 3 working days
 - Info-request loop that preserves the approval stage (employee response resumes the same stage)
 - Transactional, race-safe transitions; validation and centralized error handling
 
@@ -69,7 +69,7 @@ These are demo accounts for quick testing: there is no public registration, so a
 Seeded requests (dates are relative to the day you seed): a 2-day pending request, a 5-day request awaiting the manager, a 5-day request awaiting the HOD, a request in NEEDS_INFO, an approved short and an approved long request, and a rejected request, with matching notifications and audit rows. Running `db:seed` again resets requests; audit rows are append-only and are kept.
 
 ## Approval workflow
-Duration is **inclusive calendar days** (Nov 10 to Nov 10 = 1, Nov 10 to Nov 12 = 3, Nov 10 to Nov 13 = 4). It lives in `server/src/domain/leaveDuration.js` and is parsed from `YYYY-MM-DD` as UTC dates, so timezones cannot shift a day; swap `countDays()` to move to working days. The threshold (3), document rule and counting method come from the `LeavePolicy` table.
+Duration is **inclusive working days: Saturdays and Sundays do not count** (Friday to Tuesday = 3). A weekend-only request is refused. It lives in `server/src/domain/leaveDuration.js` and is parsed from `YYYY-MM-DD` as UTC dates, so timezones cannot shift a day. The threshold (3), document rule and counting method come from the `LeavePolicy` table.
 
 | Days | Path |
 |---|---|
@@ -112,7 +112,7 @@ Server tests need a database `leaveflow_test` (see [docs/testing.md](docs/testin
 Live at https://leaveflow.onrender.com: one Docker service on Render (root `Dockerfile` + `render.yaml`) that serves the API and the built React app, with Supabase PostgreSQL (session pooler) and Cloudflare R2 for documents. The service was deployed by the project owner; the automated tests here run against local databases, not the live service. Steps, environment variables, rebuild and troubleshooting: [docs/deployment.md](docs/deployment.md). Without the three R2 variables, documents fall back to local disk, which is ephemeral on Render.
 
 ## Known limitations
-- Calendar-day counting only; no holiday/weekend handling or leave balances/quotas.
+- Weekends are excluded, but public holidays are not modelled; no leave balances/quotas.
 - HODs cannot request leave. One department per user, one HOD per department.
 - R2 storage (`server/src/utils/storage.js`) was smoke-tested manually (save, read, delete); automated tests use local disk.
 - Notifications are in-app only (30 s polling, no email/push). No password reset or user administration UI; users come from the seed.
