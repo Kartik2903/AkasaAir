@@ -22,4 +22,4 @@ Client (`client/src/features/leaves/leaves.test.jsx`): date-only formatting, sta
 Run results below were produced on a developer machine. The deployed Render service was not covered by these automated tests.
 
 ## Results from the last run in this repo
-Server 41/41, client 8/8, lint clean, `vite build` succeeds. A scripted headless-Chrome run drove the real UI through the four-day lifecycle against the running API and confirmed each step (preview, document gate, approvals, info request, response, final approval, notification bell) and no horizontal overflow at 375px. Re-run on your machine to confirm.
+Server 46/46, client 8/8, lint clean, `vite build` succeeds. A scripted headless-Chrome run drove the real UI through the four-day lifecycle against the running API and confirmed each step (preview, document gate, approvals, info request, response, final approval, notification bell) and no horizontal overflow at 375px. Re-run on your machine to confirm.

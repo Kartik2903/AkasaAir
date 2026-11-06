@@ -69,7 +69,7 @@ These are demo accounts for quick testing: there is no public registration, so a
 Seeded requests (dates are relative to the day you seed): a 2-day pending request, a 5-day request awaiting the manager, a 5-day request awaiting the HOD, a request in NEEDS_INFO, an approved short and an approved long request, and a rejected request, with matching notifications and audit rows. Running `db:seed` again resets requests; audit rows are append-only and are kept.
 
 ## Approval workflow
-Duration is **inclusive working days: Saturdays and Sundays do not count** (Friday to Tuesday = 3). A weekend-only request is refused. It lives in `server/src/domain/leaveDuration.js` and is parsed from `YYYY-MM-DD` as UTC dates, so timezones cannot shift a day. The threshold (3), document rule and counting method come from the `LeavePolicy` table.
+Duration is **inclusive working days: Saturdays and Sundays do not count** (Friday to Tuesday = 3). A weekend-only request is refused, as are past start dates and ranges over a year. It lives in `server/src/domain/leaveDuration.js` and is parsed from `YYYY-MM-DD` as UTC dates, so timezones cannot shift a day. The threshold (3), document rule and counting method come from the `LeavePolicy` table.
 
 | Days | Path |
 |---|---|
@@ -106,7 +106,7 @@ See [.env.example](.env.example): `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`
 `npm run dev | build | start | lint | test | test:coverage | db:up | db:migrate | db:deploy | db:seed`
 
 ## Testing
-Server tests need a database `leaveflow_test` (see [docs/testing.md](docs/testing.md)). The suite covers the 20 required scenarios. Last run in this repo: server 41/41, client 8/8, lint clean, production build succeeds, plus a scripted browser run of the four-day lifecycle (apply with document, manager approve, HOD request info, employee respond, HOD approve) with desktop and 375px screenshots.
+Server tests need a database `leaveflow_test` (see [docs/testing.md](docs/testing.md)). The suite covers the 20 required scenarios. Last run in this repo: server 46/46, client 8/8, lint clean, production build succeeds, plus a scripted browser run of the four-day lifecycle (apply with document, manager approve, HOD request info, employee respond, HOD approve) with desktop and 375px screenshots.
 
 ## Deployment
 Live at https://leaveflow.onrender.com: one Docker service on Render (root `Dockerfile` + `render.yaml`) that serves the API and the built React app, with Supabase PostgreSQL (session pooler) and Cloudflare R2 for documents. The service was deployed by the project owner; the automated tests here run against local databases, not the live service. Steps, environment variables, rebuild and troubleshooting: [docs/deployment.md](docs/deployment.md). Without the three R2 variables, documents fall back to local disk, which is ephemeral on Render.

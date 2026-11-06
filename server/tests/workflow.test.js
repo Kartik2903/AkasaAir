@@ -111,6 +111,31 @@ describe('submission rules', () => {
     expect((await ag.emp.get('/api/leaves/preview').query(q)).body.data.valid).toBe(false);
     expect((await ag.emp.post('/api/leaves').field(q).field('reason', 'Weekend only')).status).toBe(400);
   });
+  it('past dates and over-long ranges are refused by the API, not just the form', async () => {
+    const past = { fromDate: '2020-01-06', toDate: '2020-01-07' };
+    expect((await ag.emp.post('/api/leaves').field(past).field('reason', 'In the past')).status).toBe(400);
+    expect((await ag.emp.get('/api/leaves/preview').query(past)).body.data.valid).toBe(false);
+    const long = await ag.emp.post('/api/leaves').field({ fromDate: '2050-01-03', toDate: '2052-01-03' }).field('reason', 'Far too long').attach('documents', PDF, { filename: 'a.pdf', contentType: 'application/pdf' });
+    expect(long.status).toBe(400);
+  });
+  it('malformed input gets a 400, never a 500', async () => {
+    const id = (await submit('emp', 1, { file: false })).body.data.id;
+    const cases = [
+      await ag.emp.post('/api/leaves').field({ fromDate: '2050-02-30', toDate: '2050-03-01' }).field('reason', 'Impossible date'),
+      await ag.emp.post('/api/leaves').field({ fromDate: '2050-01-03', toDate: '2050-01-03' }).field('reason', '     '),
+      await ag.emp.post('/api/leaves').field({ fromDate: '2050-01-03', toDate: '2050-01-03' }).field('reason', 'x'.repeat(501)),
+      await ag.emp.post('/api/leaves').field({ fromDate: 'tomorrow', toDate: '2050-01-03' }).field('reason', 'Bad format'),
+      await ag.emp.get('/api/leaves').query({ from: '2050-02-30' }),
+      await ag.emp.get('/api/leaves').query({ status: 'NOPE' }),
+      await ag.emp.get('/api/leaves').query({ limit: 1000 }),
+      await ag.emp.get('/api/leaves/not-a-uuid'),
+      await ag.emp.get('/api/calendar/team').query({ month: '2050-13' }),
+      await ag.emp.post(`/api/leaves/${id}/documents`),
+      await request(app).post('/api/auth/login').set('content-type', 'application/json').send('{bad json'),
+      await request(app).post('/api/auth/login').send({ email: 'nope', password: 'x' }),
+    ];
+    expect(cases.map((r) => r.status)).toEqual(cases.map(() => 400));
+  });
   it('HOD cannot apply for leave', async () => expect((await submit('hod', 2, { file: false })).status).toBe(403));
 });
 

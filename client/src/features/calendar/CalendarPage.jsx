@@ -35,7 +35,7 @@ export default function CalendarPage({ title = 'Team calendar' }) {
 
   return (
     <>
-      <PageHeader title={title} description="Approved leave is solid; leave still awaiting a decision is outlined. Reasons and documents are never shown here."
+      <PageHeader title={title} description="Approved leave is solid; leave still awaiting a decision is outlined. Reasons and documents are never shown here. Weekends are not counted as leave days; public holidays are not tracked."
         actions={data?.team?.length > 1 && (
           <Select aria-label="Filter by person" className="w-48" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}>
             <option value="">Everyone</option>{data.team.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}

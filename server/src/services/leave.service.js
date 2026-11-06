@@ -1,7 +1,7 @@
 import { prisma } from '../config/prisma.js';
 import { ApiError } from '../utils/ApiError.js';
 import { toSkipTake, buildMeta } from '../utils/pagination.js';
-import { parseDate, formatDate, countDays } from '../domain/leaveDuration.js';
+import { parseDate, formatDate, countDays, todayUtc } from '../domain/leaveDuration.js';
 import { planLeave, transition, ACTIVE_STATUSES, OPEN_STATUSES, FINAL_STATUSES } from '../domain/leaveWorkflow.js';
 import { visibleWhere, approverWhere, loadVisibleRequest, isApprover, approverIdFor, REQUEST_INCLUDE } from './access.service.js';
 import { documentService } from './document.service.js';
@@ -21,12 +21,22 @@ async function findOverlap(db, employeeId, from, to, excludeId) {
 
 const employeeCtx = (user) => prisma.user.findUnique({ where: { id: user.id }, select: { managerId: true, manager: { select: { id: true, name: true, role: true } }, department: { select: { hodId: true, hod: { select: { name: true } } } } } });
 
+// Date rules shared by preview and submit. Returns a problem, or null when the range is acceptable.
+const MAX_RANGE_DAYS = 365;
+function dateProblem(from, to) {
+  if (to < from) return { field: 'body.toDate', message: 'The end date cannot be earlier than the start date' };
+  if (from < todayUtc()) return { field: 'body.fromDate', message: 'The start date cannot be in the past' };
+  if (countDays(from, to, 'CALENDAR') > MAX_RANGE_DAYS) return { field: 'body.toDate', message: 'A single request cannot span more than a year' };
+  return null;
+}
+
 // ---- preview (same rules as submit; never writes) ----
 async function preview(user, { fromDate, toDate }) {
   const messages = [];
   const from = parseDate(fromDate); const to = parseDate(toDate);
   if (!from || !to) return { valid: false, messages: ['Choose a start and end date.'] };
-  if (to < from) return { valid: false, messages: ['The end date cannot be earlier than the start date.'] };
+  const problem = dateProblem(from, to);
+  if (problem) return { valid: false, messages: [`${problem.message}.`] };
   const policy = await getPolicy();
   const ctx = await employeeCtx(user);
   if (!ctx?.manager) return { valid: false, messages: ['You have no reporting manager assigned, so a request cannot be routed.'] };
@@ -50,7 +60,8 @@ async function create(user, { fromDate, toDate, reason }, files) {
   if (user.role === 'HOD') throw ApiError.forbidden('HODs have no approver above them; leave for HODs is not supported yet');
   const from = parseDate(fromDate); const to = parseDate(toDate);
   if (!from || !to) throw ApiError.badRequest('Invalid dates', [{ field: 'body.fromDate', message: 'Use YYYY-MM-DD' }]);
-  if (to < from) throw ApiError.badRequest('Validation failed', [{ field: 'body.toDate', message: 'The end date cannot be earlier than the start date' }]);
+  const problem = dateProblem(from, to);
+  if (problem) throw ApiError.badRequest('Validation failed', [problem]);
 
   const policy = await getPolicy();
   const ctx = await employeeCtx(user);
