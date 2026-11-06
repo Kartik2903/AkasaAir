@@ -1,54 +1,33 @@
 # Deployment
 
-Status: configs are prepared; **no cloud deployment was performed**, so no URL is claimed. The Docker image for the API was built locally successfully; the Render Blueprint and AWS steps are unverified against live accounts.
+Target: **Render** (one Docker web service: API plus the built React app) with **Supabase** Postgres and **Cloudflare R2** for documents. Status: the Docker image was built and run locally against Postgres; nothing is deployed from this repo yet, so no live URL is claimed.
 
 ## Environment variables
-| Var | Where | Notes |
-|---|---|---|
-| NODE_ENV | API | `production` |
-| PORT | API | default 4000 (Render sets it) |
-| DATABASE_URL | API | Postgres URL; add `?connection_limit=10` to size the pool |
-| JWT_SECRET | API | 32+ random chars; never commit |
-| JWT_EXPIRES_IN | API | default `1d` |
-| UPLOAD_DIR | API | folder for documents (local disk) |
-| CLIENT_ORIGIN | API | exact frontend origin(s), comma-separated (CORS) |
-| COOKIE_SAMESITE | API | `lax` (same site) or `none` (frontend and API on different sites; forces Secure) |
-| VITE_API_URL | build of client | API origin; empty = same-origin (dev proxy) |
-
-## Render (default)
-1. Push the repo to GitHub. Copy `deployment/render/render.yaml` to the repo root as `render.yaml`.
-2. Render > New > Blueprint > pick the repo. It creates Postgres, the API (web service) and the static site.
-3. After first deploy set `CLIENT_ORIGIN` (API) to the static site URL and `VITE_API_URL` (static site) to the API URL, then redeploy both. `VITE_*` is baked at build time.
-4. Migrations: the start command runs `prisma migrate deploy` (never `migrate dev`). Paid plans can use `preDeployCommand` instead.
-5. Users: there is no registration. Create real users in the database; the demo seed (known password) is for local use only.
-6. **Documents**: Render's disk is ephemeral, so uploaded files vanish on redeploy. Set `STORAGE_BUCKET_API` (`https://<account>.r2.cloudflarestorage.com/<bucket>`), `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` to store documents in Cloudflare R2 (adapter in `server/src/utils/storage.js`), or attach a persistent disk and set `UPLOAD_DIR`.
-
-Monorepo notes: build commands run from the repo root with workspaces (`npm ci`, `-w client`); the static publish dir is `client/dist`; the SPA rewrite handles deep links. Free Postgres expires after 30 days; free web services sleep after idle.
-
-Verification checklist
-- [ ] `GET <api>/health` returns `{"status":"ok","db":"up"}`
-- [ ] `<api>/api/docs` loads
-- [ ] Frontend loads, deep link `/requests` refreshes without 404
-- [ ] Log in, reload keeps the session (cookie Secure + SameSite=None)
-- [ ] Submit a 4-day request with a PDF, approve as manager, then as HOD; timeline and audit show every step
-- [ ] Download a document as an in-scope user; it fails for others
-- [ ] Browser console shows no CORS errors
-
-## AWS (alternative)
-Nothing is provisioned by this repo. **Get explicit approval before creating any resource; these cost money.**
-
-| Component | Service |
+| Var | Notes |
 |---|---|
-| React build | S3 (private) + CloudFront (OAC), custom error response 403/404 -> `/index.html` 200 |
-| API | App Runner from the Docker image in ECR (or Elastic Beanstalk) |
-| PostgreSQL | RDS (MySQL / SQL Server variants also RDS) |
-| Secrets | Secrets Manager (`DATABASE_URL`, `JWT_SECRET`) injected as env |
-| Documents | S3 private bucket + server-side encryption; implement the `storage` adapter (presigned URLs not needed, the API streams after its own auth check) |
-| Logs | CloudWatch (App Runner ships stdout; pino logs JSON) |
+| NODE_ENV | `production` |
+| PORT | set by the host (Render); default 4000 locally |
+| DATABASE_URL | Supabase **Session pooler** URI (`...pooler.supabase.com:5432/postgres`). Direct connections are IPv6-only; avoid the 6543 transaction pooler (migrations, advisory locks). URL-encode special characters in the password (`@` is `%40`). Append `?connection_limit=3`: Prisma's default pool exceeds the pooler's session limit and fails with "Can't reach database server" (seen while seeding) |
+| JWT_SECRET | 32+ random chars; never commit |
+| JWT_EXPIRES_IN | default `1d` |
+| CLIENT_ORIGIN | the service's public origin (CORS) |
+| COOKIE_SAMESITE | `lax` (the app and API share one origin) |
+| STORAGE_BUCKET_API, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY | Cloudflare R2 documents. All three set = R2; otherwise local disk (`UPLOAD_DIR`, ephemeral on Render) |
 
-Steps: (1) build/push `deployment/docker/Dockerfile.server` to ECR; (2) create RDS in private subnets, security group allowing only the App Runner VPC connector on 5432; (3) create App Runner service, port 4000, health check `/health`, env + secrets; (4) `npm run build -w client` with `VITE_API_URL=<api>`, upload `client/dist` to S3, front with CloudFront (HTTPS via ACM); (5) put frontend and API under one CloudFront domain (route `/api/*` to the API origin) to keep cookies same-site, then use `COOKIE_SAMESITE=lax`.
-IAM: least privilege, an instance role that can read only its secrets, no long-lived access keys in the repo. Cost: RDS and App Runner bill while idle; use the smallest sizes and delete after the assessment.
-Verification: same checklist as Render, plus CloudWatch log stream shows requests.
+## Steps
+1. Migrate and seed the Supabase database from your machine (Render's free tier has no pre-deploy hook): with `DATABASE_URL` pointing at Supabase in `.env`, run `npm run db:deploy`, then seed with the URL ending `?connection_limit=2` (the `npm run db:seed` script reads `.env`). The seed creates demo users with the known password `Password@123`; for anything real, create your own users or change the passwords.
+2. Push to GitHub. Render > New > Blueprint > pick the repo (`render.yaml` is at the root). Fill the `sync: false` variables. After the first deploy, set `CLIENT_ORIGIN` to the service URL.
+3. The image builds the client and serves it from Express; deep links fall back to `index.html`.
 
-## Docker (optional)
-`npm run db:up` starts Postgres (port 5433). Full stack: `JWT_SECRET=... docker compose -f deployment/docker/docker-compose.yml up --build`.
+Free Render web services sleep after inactivity; the first request wakes them (about a minute). Warm it before a demo.
+
+## Verification checklist
+- [ ] `GET /health` returns `{"status":"ok","db":"up"}`
+- [ ] `/api/docs` loads; `/requests` refreshes without a 404
+- [ ] Log in; reload keeps the session
+- [ ] Submit a 4-day request with a PDF, approve as manager, then as HOD; timeline and audit show every step
+- [ ] The document appears in the R2 bucket and downloads for an in-scope user only
+- [ ] No CORS errors in the browser console
+
+## Local
+`npm run db:up` starts Postgres on port 5433. Build and run the image locally with `docker build -t leaveflow .`.

@@ -83,16 +83,12 @@ h1, h2, h3 { text-wrap: balance; font-weight: 650; letter-spacing: -0.015em; ove
 /* Tabular figures keep columns of numbers aligned */
 .tnum { font-variant-numeric: tabular-nums; }
 
-/* Aceternity-style spotlight sweep (transform/opacity only) */
-@keyframes spotlight { 0% { opacity: 0; transform: translate(-72%, -62%) scale(0.5); } 100% { opacity: 1; transform: translate(-50%, -40%) scale(1); } }
-.animate-spotlight { animation: spotlight 2s ease 0.75s 1 forwards; opacity: 0; }
 
 @keyframes shimmer { 50% { opacity: 0.5; } }
 .skeleton { animation: shimmer 1.6s ease-in-out infinite; background: var(--surface-2); border-radius: 6px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
-  .animate-spotlight { opacity: 1; transform: translate(-50%, -40%); }
 }
 
 @media print {

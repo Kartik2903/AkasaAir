@@ -1,0 +1,18 @@
+# Render Blueprint: one Docker web service (API + built React app). Database is Supabase (external).
+# Render > New > Blueprint > pick this repo. Fill the sync:false values in the dashboard.
+services:
+  - type: web
+    name: leaveflow
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - { key: NODE_ENV, value: production }
+      - { key: COOKIE_SAMESITE, value: lax }          # API and app share one origin
+      - { key: DATABASE_URL, sync: false }            # Supabase session pooler URI, password URL-encoded, ending ?connection_limit=3
+      - { key: JWT_SECRET, generateValue: true }
+      - { key: CLIENT_ORIGIN, sync: false }           # https://<service>.onrender.com
+      - { key: STORAGE_BUCKET_API, sync: false }      # https://<account>.r2.cloudflarestorage.com/<bucket>
+      - { key: R2_ACCESS_KEY_ID, sync: false }
+      - { key: R2_SECRET_ACCESS_KEY, sync: false }

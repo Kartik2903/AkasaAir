@@ -87,16 +87,15 @@ See [.env.example](.env.example): `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`
 Server tests need a database `leaveflow_test` (see [docs/testing.md](docs/testing.md)). The suite covers the 20 required scenarios. Last run in this repo: server 41/41, client 8/8, lint clean, production build succeeds, plus a scripted browser run of the four-day lifecycle (apply with document, manager approve, HOD request info, employee respond, HOD approve) with desktop and 375px screenshots.
 
 ## Deployment
-Render Blueprint in `deployment/render/render.yaml`; AWS alternative and **document storage warning** in [docs/deployment.md](docs/deployment.md). Nothing has been deployed from this repo, so no live URL exists. Documents go to Cloudflare R2 when its three env vars are set; the local-disk fallback is ephemeral on Render.
+Render (one Docker service, root `Dockerfile` + `render.yaml`) with Supabase Postgres and Cloudflare R2 for documents. Steps and checklist: [docs/deployment.md](docs/deployment.md). Nothing has been deployed from this repo yet, so no live URL exists. Without the three R2 env vars, documents use local disk, which is ephemeral on Render.
 
 ## Known limitations
 - Calendar-day counting only; no holiday/weekend handling or leave balances/quotas.
 - HODs cannot request leave. One department per user, one HOD per department.
-- R2 storage is selected by env vars in `server/src/utils/storage.js`; the R2 path is not covered by automated tests (tests use local disk).
+- R2 storage (`server/src/utils/storage.js`) was smoke-tested manually (save, read, delete); automated tests use local disk.
 - Notifications are in-app only (30 s polling, no email/push). No password reset or user administration UI; users come from the seed.
 - In-memory rate limiter (per instance); no CSRF token (SameSite cookie + restricted CORS).
-- Hallmark's render lint was run on the public login page only; signed-in pages were reviewed from screenshots, not linted.
-- Colours were not checked on realtimecolors.com (Playwright MCP was unavailable).
+- Hallmark lint of signed-in pages ran on static snapshots (the linter cannot log in). Colour contrast was computed by hand (all pairs pass WCAG AA); realtimecolors.com's readout was not captured.
 
 ## Future (P2, deferred)
 AI Leave Policy Copilot, AI request summaries and recommendations, natural-language analytics, predictive insights, CSV/PDF export, working-day counting with holiday calendars, leave balances.
